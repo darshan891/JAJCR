@@ -1,0 +1,39 @@
+import gensim.downloader as api
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+
+# Load pre-trained word vectors (Google News Word2Vec)
+word_vectors = api.load("word2vec-google-news-300")
+
+# Select 10 words related to 'Technology'
+words = ["computer", "laptop", "AI", "machine", "robot", "software", "hardware",
+"algorithm", "network", "cybersecurity"]
+
+# Get vector representations
+vectors = np.array([word_vectors[word] for word in words])
+
+# Function to visualize embeddings
+def plot_embeddings(vectors, words, method="PCA"):
+
+    if method == "PCA":
+        reduced = PCA(n_components=2).fit_transform(vectors)
+    else:
+        reduced = TSNE(n_components=2, perplexity=5,
+random_state=42).fit_transform(vectors)
+
+    plt.figure(figsize=(8, 6))
+    plt.scatter(reduced[:, 0], reduced[:, 1])
+
+    for i, word in enumerate(words):
+        plt.annotate(word, (reduced[i, 0], reduced[i, 1]), fontsize=12)
+
+    plt.title(f"Word Embedding Visualization using {method}")
+    plt.show()
+
+# PCA Visualization
+plot_embeddings(vectors, words, method="PCA")
+
+# t-SNE Visualization
+plot_embeddings(vectors, words, method="t-SNE")

@@ -1,0 +1,24 @@
+from transformers import pipeline
+
+# Load summarization pipeline
+summarizer = pipeline("summarization")
+
+# Input paragraph
+text = """
+Artificial Intelligence (AI) is a rapidly growing field of computer science.
+It enables machines to simulate human intelligence and perform tasks such as
+decision-making, problem-solving, and language understanding. AI is widely
+used in healthcare, education, finance, and transportation. Machine learning
+and deep learning are important branches of AI that help systems learn from
+data and improve performance over time.
+"""
+
+# Generate summary
+summary = summarizer(text, max_length=50, min_length=20, do_sample=False)
+
+# Print summary
+print("Original Text:\n")
+print(text)
+
+print("\nSummarized Text:\n")
+print(summary[0]['summary_text'])

@@ -1,0 +1,62 @@
+!pip install google-api-python-client==2.100.0
+
+!pip install langchain cohere langchain-community pydantic google-auth
+google-auth-oauthlib google-auth-httplib2
+
+import os
+
+os.environ["COHERE_API_KEY"] = "YOUR_API_KEY"
+
+from google.colab import drive
+
+drive.mount('/content/drive')
+
+file_path = "/content/drive/My Drive/article_000000.txt"
+
+with open(file_path, "r") as file:
+    document_text = file.read()
+
+print(document_text[:500])  # Print first 500 characters
+
+from langchain.prompts import PromptTemplate
+
+template = """You are an AI assistant. Analyze the following document and
+provide insights:
+
+Document Content:
+{document}
+
+Task:
+1. Extract main keywords.
+2. Summarize in 3 sentences.
+3. Identify the main topics.
+4. Perform Named Entity Recognition (NER) to detect people, organizations,
+locations, and dates.
+
+Output format:
+- **Keywords:** [list of keywords]
+- **Summary:** [summary]
+- **Topics:** [topics]
+- **Entities:** [list of entities categorized as People, Organizations,
+Locations, Dates]
+
+Now, process the document.
+"""
+
+prompt = PromptTemplate(input_variables=["document"], template=template)
+
+formatted_prompt = prompt.format(document=document_text)
+
+print(formatted_prompt)
+
+import cohere
+
+co = cohere.Client(os.getenv("COHERE_API_KEY"))  # Initialize Cohere client
+
+response = co.generate(
+    model="command-xlarge-nightly",
+    prompt=formatted_prompt,
+    max_tokens=500
+)
+
+print("Generated Response:", response.generations[0].text)

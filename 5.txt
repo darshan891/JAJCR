@@ -1,0 +1,48 @@
+!pip.install sentence-sentence_transformers
+
+from sentence_transformers import SentenceTransformer, util
+import torch
+import random
+
+# Load pre-trained SBERT model
+model = SentenceTransformer('all-MiniLM-L6-v2')
+
+# Function to get similar words based on cosine similarity
+def get_similar_words(word, word_list, top_n=5):
+
+    # Encode all words into embeddings
+    word_embeddings = model.encode([word] + word_list, convert_to_tensor=True)
+
+    # Compute cosine similarity
+    similarities = util.pytorch_cos_sim(word_embeddings[0], word_embeddings[1:]).squeeze(0)
+
+    # Get top N most similar words
+    top_indices = torch.topk(similarities, top_n).indices.tolist()
+
+    return [word_list[i] for i in top_indices]
+
+# Function to generate a meaningful paragraph using similar words
+def generate_story(seed_word):
+
+    # Sample word list (can be replaced with a larger corpus)
+    word_list = ["adventure", "journey", "quest", "mystery", "discovery",
+"expedition", "exploration", "voyage"]
+
+    similar_words = get_similar_words(seed_word, word_list, top_n=5)
+
+    random.shuffle(similar_words)
+
+    story_template = (
+        f"One day, a {seed_word} set out on a {similar_words[0]}. "
+        f"Along the way, it stumbled upon a {similar_words[1]} that led to an unexpected {similar_words[2]}. "
+        f"Guided by an old {similar_words[3]}, the {seed_word} finally reached the ultimate {similar_words[4]}."
+    )
+
+    return story_template
+
+# Example usage
+seed_word = "explorer"
+
+story = generate_story(seed_word)
+
+print("\n✨ Generated Story:\n", story)

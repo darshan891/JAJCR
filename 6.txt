@@ -1,0 +1,30 @@
+from transformers import pipeline
+
+# Load sentiment analysis model (DistilBERT - Trained on SST-2)
+sentiment_pipeline = pipeline("sentiment-analysis")
+
+# Function to analyze sentiment
+def analyze_sentiment(text):
+
+    result = sentiment_pipeline(text)[0]  # Get the first result
+
+    label = result["label"]
+    confidence = result["score"]
+
+    return f"Sentiment: {label} (Confidence: {confidence:.2f})"
+
+# Example inputs
+texts = [
+    "I love this product! It's amazing.",
+    "This is the worst experience I've ever had.",
+    "The movie was okay, but nothing special.",
+    "I'm extremely happy with my new laptop!",
+    "This service is so frustrating and disappointing."
+]
+
+# Analyzing sentiment for each text
+for text in texts:
+
+    print(f"Text: {text}")
+    print(analyze_sentiment(text))
+    print("-" * 50)
