@@ -1,62 +1,124 @@
-!pip install google-api-python-client==2.100.0
+# =========================================================
+# PROGRAM 8
+# DECISION TREE ALGORITHM USING BREAST CANCER DATASET
+# =========================================================
 
-!pip install langchain cohere langchain-community pydantic google-auth
-google-auth-oauthlib google-auth-httplib2
+# Import Necessary Libraries
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 
-import os
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
+from sklearn import tree
 
-os.environ["COHERE_API_KEY"] = "YOUR_API_KEY"
 
-from google.colab import drive
+# =========================================================
+# LOAD DATASET
+# =========================================================
 
-drive.mount('/content/drive')
+# Load Breast Cancer Dataset
+data = load_breast_cancer()
 
-file_path = "/content/drive/My Drive/article_000000.txt"
+# Features and Target
+X = data.data
+y = data.target
 
-with open(file_path, "r") as file:
-    document_text = file.read()
+# Display Dataset Information
+print("=================================================")
+print("BREAST CANCER DATASET")
+print("=================================================")
 
-print(document_text[:500])  # Print first 500 characters
+print("\nFeature Names:")
+print(data.feature_names)
 
-from langchain.prompts import PromptTemplate
+print("\nTarget Names:")
+print(data.target_names)
 
-template = """You are an AI assistant. Analyze the following document and
-provide insights:
+print("\nDataset Shape:", X.shape)
 
-Document Content:
-{document}
 
-Task:
-1. Extract main keywords.
-2. Summarize in 3 sentences.
-3. Identify the main topics.
-4. Perform Named Entity Recognition (NER) to detect people, organizations,
-locations, and dates.
+# =========================================================
+# SPLIT DATASET
+# =========================================================
 
-Output format:
-- **Keywords:** [list of keywords]
-- **Summary:** [summary]
-- **Topics:** [topics]
-- **Entities:** [list of entities categorized as People, Organizations,
-Locations, Dates]
-
-Now, process the document.
-"""
-
-prompt = PromptTemplate(input_variables=["document"], template=template)
-
-formatted_prompt = prompt.format(document=document_text)
-
-print(formatted_prompt)
-
-import cohere
-
-co = cohere.Client(os.getenv("COHERE_API_KEY"))  # Initialize Cohere client
-
-response = co.generate(
-    model="command-xlarge-nightly",
-    prompt=formatted_prompt,
-    max_tokens=500
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.3,
+    random_state=42
 )
 
-print("Generated Response:", response.generations[0].text)
+
+# =========================================================
+# CREATE DECISION TREE MODEL
+# =========================================================
+
+clf = DecisionTreeClassifier(random_state=42)
+
+# Train the Model
+clf.fit(X_train, y_train)
+
+
+# =========================================================
+# MODEL PREDICTION
+# =========================================================
+
+# Predict on Test Data
+y_pred = clf.predict(X_test)
+
+# Accuracy
+accuracy = accuracy_score(y_test, y_pred)
+
+print("\n=================================================")
+print("MODEL ACCURACY")
+print("=================================================")
+
+print(f"Accuracy of Decision Tree Classifier: {accuracy * 100:.2f}%")
+
+
+# =========================================================
+# CLASSIFY A NEW SAMPLE
+# =========================================================
+
+print("\n=================================================")
+print("CLASSIFICATION OF NEW SAMPLE")
+print("=================================================")
+
+# New Sample Data
+new_sample = np.array([[
+    14.3, 18.1, 92.8, 600.1, 0.097,
+    0.084, 0.083, 0.080, 0.077, 0.064,
+    0.087, 0.087, 0.077, 0.089, 0.085,
+    0.085, 0.080, 0.095, 0.087, 0.090,
+    0.091, 0.080, 0.076, 0.080, 0.092,
+    0.079, 0.089, 0.090, 0.091, 0.089
+]])
+
+# Predict Class
+new_prediction = clf.predict(new_sample)
+
+# Display Result
+if new_prediction[0] == 1:
+    print("Predicted Class for the new sample: Benign")
+else:
+    print("Predicted Class for the new sample: Malignant")
+
+
+# =========================================================
+# VISUALIZE DECISION TREE
+# =========================================================
+
+plt.figure(figsize=(20, 10))
+
+tree.plot_tree(
+    clf,
+    filled=True,
+    feature_names=data.feature_names,
+    class_names=data.target_names
+)
+
+plt.title("Decision Tree - Breast Cancer Dataset")
+
+plt.show()
