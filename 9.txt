@@ -1,100 +1,34 @@
-!pip install langchain langchain-community cohere wikipedia-api pydantic
+9th program
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.datasets import fetch_olivetti_faces
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score
+data = fetch_olivetti_faces(shuffle = True,random_state=42)
+X = data.data
+y = data.target
+print("Features shape:",X.shape)
+print("Label shape:",y.shape)
+X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.3,random_state=42)
+print("Training samples:",X_train.shape[0])
+print("Testing samples:",X_test.shape[0])
 
-import os
-from langchain.llms import Cohere
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
-import wikipediaapi
-from pydantic import BaseModel, Field
+model = GaussianNB()
+model.fit(X_train,y_train)
 
-# Set Cohere API Key
-os.environ["COHERE_API_KEY"] = "YOUR_API_KEY"
+y_pred = model.predict(X_test)
 
-# Initialize Cohere Model
-llm = Cohere(
-    model="command",
-    cohere_api_key=os.getenv("COHERE_API_KEY")
-)
+accuracy = accuracy_score(y_test,y_pred)
+print("Accuracy",accuracy)
 
-class InstitutionInfo(BaseModel):
-    name: str = Field(..., title="Institution Name")
-    founder: str = Field(..., title="Founder Name")
-    founded_year: str = Field(..., title="Year of Establishment")
-    branches: str = Field(..., title="Current Branches")
-    employees: str = Field(..., title="Number of Employees")
-    summary: str = Field(..., title="4-line Summary")
+sample_index = 0
+sample = X_test[sample_index].reshape(1,-1)
+prediction = model.predict(sample)
+print("Predicted:",prediction[0])
+print("Actual:",y_test[sample_index])
 
-def fetch_wikipedia_summary(institution_name):
-    """Fetches institution details from Wikipedia."""
-
-    wiki = wikipediaapi.Wikipedia(
-        user_agent='your-user-agent',
-        language='en'
-    )
-
-    page = wiki.page(institution_name)
-
-    if not page.exists():
-        return None
-
-    return page.summary
-
-def extract_info_with_cohere(institution_name):
-    """Uses Cohere LLM to extract structured details from Wikipedia text."""
-
-    summary = fetch_wikipedia_summary(institution_name)
-
-    if summary is None:
-        return None
-
-    # Define Prompt for LangChain + Cohere
-    prompt_template = PromptTemplate(
-        input_variables=["institution_name", "text"],
-        template="""
-Extract the following details about {institution_name} from the given text:
-
-1. Founder of the institution
-2. Year it was founded
-3. Current branches (if available)
-4. Number of employees (if available)
-5. A 4-line summary about the institution
-
-Text:
-{text}
-
-Return the result in this structured format:
-
-Founder: <name>
-Founded Year: <year>
-Branches: <branches>
-Employees: <count>
-Summary: <4-line summary>
-"""
-    )
-
-    # Create LangChain Chain
-    chain = LLMChain(llm=llm, prompt=prompt_template)
-
-    # Invoke LLM
-    response = chain.run(
-        institution_name=institution_name,
-        text=summary
-    )
-
-    # Parse Output
-    lines = response.split("\n")
-
-    founder = lines[0].split(":")[1].strip()
-    founded_year = lines[1].split(":")[1].strip()
-    branches = lines[2].split(":")[1].strip()
-    employees = lines[3].split(":")[1].strip()
-    summary_text = lines[4].split(":")[1].strip()
-
-    return InstitutionInfo(
-        name=institution_name,
-        founder=founder,
-        founded_year=founded_year,
-        branches=branches,
-        employees=employees,
-        summary=summary_text
-    )
+plt.imshow (X_test[sample_index].reshape(64,64),cmap='gray')
+plt.title(f"Prdicted:{prediction[0]}|Actual:{y_test[sample_index]}")
+plt.axis('off')
+plt.show()
